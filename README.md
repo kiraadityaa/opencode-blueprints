@@ -66,18 +66,28 @@ That's it. Deploy removes nothing on your machine — it only creates `.opencode
 
 ```
 blueprint.sh list                 List available blueprints
+blueprint.sh list --json          Same, as JSON (banner suppressed)
 blueprint.sh show <name>          Show details of a blueprint
+blueprint.sh show <name> --json   Same, as a single JSON object
+blueprint.sh detect [<path>]      Detect the stack in a directory → suggest a blueprint
+blueprint.sh detect <path> --json Print {"blueprint": "...", "detected_by": "..."}
+blueprint.sh test [<name>|all]    Validate blueprint(s) locally (exit 1 on failure)
+blueprint.sh test all --dir <p>   Validate a blueprints/ dir elsewhere (e.g. a fork)
 blueprint.sh init <name>          Apply a blueprint into .opencode/ of the current project
 blueprint.sh update               Refresh the blueprint catalog from GitHub
 blueprint.sh --version            Print version and exit
 blueprint.sh --help               Show this help
 ```
 
+`detect` scans for `package.json` (react/next/vite → `ts-react`, express/fastify → `node-api`), `pyproject.toml`/`requirements.txt`/`uv.lock` → `python`, and hints at stacks with no blueprint yet (`go`, `rust`, `laravel`, `docker`). Exit code 0 when detected, 1 otherwise — scriptable.
+
+`test` validates every `blueprints/*/`: `blueprint.meta` (`name`, `description`, `stack`, `name` must match the folder), `opencode.json` (valid JSON + a `"*"` default rule in `permission.bash`), `AGENTS.md` presence, and `description:` frontmatter on every agent/command file.
+
 ### `init` options
 
 | Option | Description |
 |---|---|
-| `--dir <path>` | Target project directory (default: current dir) |
+| `--dir <path>` | Target project directory (default: current dir) — resolved to `pwd -P` (no symlink escape) |
 | `--root` | Also write `AGENTS.md` to the project root |
 | `--no-agents` | Skip stack agents |
 | `--no-commands` | Skip stack commands |
@@ -168,7 +178,7 @@ Yes — the piped `curl … | bash -s init <name>` variant auto-downloads and ca
 
 ## Development
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Every change to `blueprints/*` or `blueprint.sh` is validated in CI: `shellcheck` on the script, JSON validity of each `opencode.json`, and an end-to-end `init` smoke test.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Every change to `blueprints/*` or `blueprint.sh` is validated in CI: `shellcheck` on the script, `blueprint.sh test all` (meta + JSON + permission + frontmatter), a `detect` smoke test, and an end-to-end `init` smoke test.
 
 ## License
 

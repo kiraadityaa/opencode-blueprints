@@ -18,6 +18,7 @@ FORCE=false
 NO_AGENTS=false
 NO_COMMANDS=false
 VERBOSE=false
+JSON_MODE=false
 
 # ─── Colors ────────────────────────────────────────────────────────
 RED='\033[0;31m'
@@ -29,11 +30,11 @@ BOLD='\033[1m'
 NC='\033[0m'
 
 # ─── Helpers ───────────────────────────────────────────────────────
-info()  { echo -e "${BLUE}▸${NC} $*"; }
-ok()    { echo -e "${GREEN}✓${NC} $*"; }
-warn()  { echo -e "${YELLOW}⚠${NC} $*"; }
+info()  { if $JSON_MODE; then return 0; fi; echo -e "${BLUE}▸${NC} $*"; }
+ok()    { if $JSON_MODE; then return 0; fi; echo -e "${GREEN}✓${NC} $*"; }
+warn()  { if $JSON_MODE; then return 0; fi; echo -e "${YELLOW}⚠${NC} $*"; }
 err()   { echo -e "${RED}✗${NC} $*" >&2; }
-debug() { if $VERBOSE; then echo -e "${CYAN}[debug]${NC} $*"; fi; }
+debug() { if $JSON_MODE; then return 0; fi; if $VERBOSE; then echo -e "${CYAN}[debug]${NC} $*"; fi; }
 die()   { err "$@"; exit 1; }
 
 need_cmd() {
@@ -72,8 +73,10 @@ Usage:
   blueprint.sh <command> [OPTIONS]
 
 Commands:
-  list                 List available blueprints
-  show <name>          Show details of a blueprint
+  list [--json]        List available blueprints
+  show <name> [--json] Show details of a blueprint
+  detect [<path>]      Detect stack and suggest a blueprint
+  test [<name>|all]    Validate blueprint(s) locally
   init <name>          Apply a blueprint into .opencode/ of the current project
   update               Refresh the blueprint catalog from GitHub
   --version            Print version and exit
@@ -90,7 +93,10 @@ init options:
 
 Examples:
   blueprint.sh list
+  blueprint.sh list --json
+  blueprint.sh detect
   blueprint.sh show ts-react
+  blueprint.sh test all
   blueprint.sh init ts-react
   blueprint.sh init python --dir ../my-project --root
   blueprint.sh init node-api --no-commands --dry-run
@@ -113,6 +119,36 @@ Options:
   --force              Overwrite existing .opencode (backs up first)
   --dry-run            Preview actions without making changes
   --verbose            Show all commands
+EOF
+    exit 0
+}
+
+detect_usage() {
+    cat <<'EOF'
+detect — detect the stack in a directory and suggest a blueprint
+
+Usage:
+  blueprint.sh detect [<path>] [--json]
+
+Options:
+  <path>               Directory to scan (default: current dir)
+  --dir <path>         Same as <path>
+  --json               Print {"blueprint": "...", "detected_by": "..."}
+EOF
+    exit 0
+}
+
+test_usage() {
+    cat <<'EOF'
+test — validate blueprints locally
+
+Usage:
+  blueprint.sh test [<name>|all] [--dir <path>]
+
+Options:
+  <name>               Validate one blueprint (default: all)
+  all                  Validate every blueprint
+  --dir <path>         Optional root that contains a blueprints/ dir
 EOF
     exit 0
 }
@@ -176,10 +212,46 @@ meta_has_alias() {
     [[ " ${aliases//,/ } " == *" $2 "* ]]
 }
 
+# ─── JSON helpers ──────────────────────────────────────────────────
+json_escape() {
+    printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+emit_list_json() {
+    local dir name desc stack effort keywords aliases first=true
+    printf '['
+    for dir in "${BLUEPRINTS_DIR}"/*/; do
+        [ -f "${dir}/blueprint.meta" ] || continue
+        name="$(meta_get "${dir}/blueprint.meta" name)"
+        desc="$(meta_get "${dir}/blueprint.meta" description)"
+        stack="$(meta_get "${dir}/blueprint.meta" stack)"
+        effort="$(meta_get "${dir}/blueprint.meta" effort)"
+        keywords="$(meta_get "${dir}/blueprint.meta" keywords)"
+        aliases="$(meta_get "${dir}/blueprint.meta" aliases)"
+        if $first; then first=false; else printf ','; fi
+        printf '\n  {"name":"%s","description":"%s","stack":"%s","effort":"%s","keywords":"%s","aliases":"%s"}' \
+            "$(json_escape "${name:-}")" "$(json_escape "${desc:-}")" "$(json_escape "${stack:-}")" \
+            "$(json_escape "${effort:-}")" "$(json_escape "${keywords:-}")" "$(json_escape "${aliases:-}")"
+    done
+    printf '\n]\n'
+}
+
 # ─── Commands ──────────────────────────────────────────────────────
 cmd_list() {
+    local json=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --json) json=true; shift ;;
+            -*)      die "Unknown list option: $1 (use --help)" ;;
+            *)       die "list takes no arguments: $1 (use --help)" ;;
+        esac
+    done
     resolve_blueprint_root
     [ -d "$BLUEPRINTS_DIR" ] || die "No blueprints found"
+    if $json; then
+        emit_list_json
+        return 0
+    fi
     info "Available blueprints:"
     echo ""
     local dir name desc
@@ -194,7 +266,14 @@ cmd_list() {
 }
 
 cmd_show() {
-    local name="${1:-}"
+    local name="" json=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --json) json=true; shift ;;
+            -*)      die "Unknown show option: $1 (use --help)" ;;
+            *)       name="$1"; shift ;;
+        esac
+    done
     [ -n "$name" ] || die "show requires a blueprint name: blueprint.sh show <name>"
     resolve_blueprint_root
     find_blueprint "$name" || die "Blueprint not found: $name (run 'blueprint.sh list')"
@@ -203,6 +282,13 @@ cmd_show() {
     name2="$(meta_get "$meta" name)"; desc="$(meta_get "$meta" description)"
     stack="$(meta_get "$meta" stack)"; effort="$(meta_get "$meta" effort)"
     keywords="$(meta_get "$meta" keywords)"; aliases="$(meta_get "$meta" aliases)"
+
+    if $json; then
+        printf '{"name":"%s","description":"%s","stack":"%s","effort":"%s","keywords":"%s","aliases":"%s"}\n' \
+            "$(json_escape "${name2:-}")" "$(json_escape "${desc:-}")" "$(json_escape "${stack:-}")" \
+            "$(json_escape "${effort:-}")" "$(json_escape "${keywords:-}")" "$(json_escape "${aliases:-}")"
+        return 0
+    fi
 
     echo ""
     echo -e "  ${BOLD}${name2}${NC} — ${desc}"
@@ -217,6 +303,151 @@ cmd_show() {
         echo ""
     fi
     info "Apply: blueprint.sh init ${name2}"
+}
+
+verify_json() {
+    if command -v python3 >/dev/null 2>&1; then
+        python3 -m json.tool "$1" >/dev/null 2>&1
+    elif command -v jq >/dev/null 2>&1; then
+        jq empty "$1" >/dev/null 2>&1
+    else
+        warn "skipping JSON validation (python3/jq not found)"
+        return 0
+    fi
+}
+
+test_blueprint() {
+    local d="$1" meta="$1/blueprint.meta" ok=true name dirname k f sub
+    [ -f "$meta" ] || { err "  missing blueprint.meta"; return 1; }
+    name="$(meta_get "$meta" name)"
+    dirname="$(basename "$d")"
+    [ -n "$name" ] || { err "  missing 'name' in blueprint.meta"; ok=false; }
+    if [ -n "$name" ] && [ "$name" != "$dirname" ]; then
+        err "  meta name '${name}' != dir '${dirname}'"
+        ok=false
+    fi
+    for k in description stack; do
+        [ -n "$(meta_get "$meta" "$k")" ] || { err "  missing '${k}' in blueprint.meta"; ok=false; }
+    done
+    [ -f "$1/opencode.json" ] || { err "  missing opencode.json"; ok=false; }
+    [ -f "$1/AGENTS.md" ]     || { err "  missing AGENTS.md"; ok=false; }
+    if [ -f "$1/opencode.json" ]; then
+        verify_json "$1/opencode.json" || { err "  opencode.json is not valid JSON"; ok=false; }
+        if ! grep -qE '"\*"[[:space:]]*:[[:space:]]*"(ask|deny)"' "$1/opencode.json"; then
+            err "  permission.bash needs a '*' default rule (ask or deny)"
+            ok=false
+        fi
+    fi
+    for sub in agents commands; do
+        if [ -d "$1/$sub" ]; then
+            for f in "$1/$sub"/*.md; do
+                [ -f "$f" ] || continue
+                grep -q '^description:' "$f" || { err "  missing frontmatter description: ${sub}/$(basename "$f")"; ok=false; }
+            done
+        fi
+    done
+    $ok
+}
+
+cmd_test() {
+    local want="" dir="."
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dir)   dir="${2:?--dir requires a path}"; shift 2 ;;
+            --dir=*) dir="${1#*=}"; shift ;;
+            --help|-h) test_usage ;;
+            -*)      die "Unknown test option: $1 (use --help)" ;;
+            *)       want="$1"; shift ;;
+        esac
+    done
+    # Support pointing test at an external blueprints dir
+    if [ -d "$dir/blueprints" ]; then
+        BLUEPRINTS_DIR="${dir%/}/blueprints"
+    else
+        resolve_blueprint_root
+    fi
+    [ -d "$BLUEPRINTS_DIR" ] || die "No blueprints found in ${BLUEPRINTS_DIR}"
+
+    local failures=0 tested=0 name d meta
+    if [ -n "$want" ] && [ "$want" != "all" ]; then
+        find_blueprint "$want" || die "Blueprint not found: $want"
+        if test_blueprint "$BPDIR"; then ok "test: ${want}"; else failures=1; fi
+    else
+        for meta in "${BLUEPRINTS_DIR}"/*/blueprint.meta; do
+            [ -f "$meta" ] || continue
+            d="${meta%/blueprint.meta}"
+            name="$(meta_get "$meta" name)"
+            if test_blueprint "$d"; then ok "test: ${name}"; else err "test FAILED: ${name}"; failures=$((failures + 1)); fi
+            tested=$((tested + 1))
+        done
+        [ "$tested" -eq 0 ] && die "No blueprints found in ${BLUEPRINTS_DIR}"
+    fi
+    if [ "$failures" -gt 0 ]; then
+        err "${failures} blueprint(s) failed validation"
+        exit 1
+    fi
+    ok "All blueprints valid"
+}
+
+cmd_detect() {
+    local target="." json=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dir)   target="${2:?--dir requires a path}"; shift 2 ;;
+            --dir=*) target="${1#*=}"; shift ;;
+            --json)  json=true; shift ;;
+            --help|-h) detect_usage ;;
+            -*)      die "Unknown detect option: $1 (use --help)" ;;
+            *)       target="$1"; shift ;;
+        esac
+    done
+    [ -d "$target" ] || die "Target directory does not exist: ${target}"
+    target="${target%/}"
+
+    local match="" detail="" hint=""
+    local pkg="${target}/package.json"
+    if [ -f "$pkg" ]; then
+        if grep -q '"react"' "$pkg"; then
+            if grep -q '"next"' "$pkg"; then match="ts-react"; detail="package.json (next + react)";
+            elif grep -qE '"vite"|"vitest"' "$pkg"; then match="ts-react"; detail="package.json (react + vite)";
+            else match="ts-react"; detail="package.json (react)"; fi
+        elif grep -qE '"express"|"fastify"' "$pkg"; then match="node-api"; detail="package.json (express/fastify)";
+        else match="node-api"; detail="package.json (node scripts)"; fi
+    fi
+    if [ -z "$match" ] && { [ -f "${target}/pyproject.toml" ] || [ -f "${target}/requirements.txt" ] || [ -f "${target}/uv.lock" ]; }; then
+        match="python"
+        if [ -f "${target}/pyproject.toml" ] && grep -qEi 'fastapi|django' "${target}/pyproject.toml"; then
+            detail="pyproject.toml (fastapi/django)"
+        else
+            detail="pyproject.toml / requirements.txt"
+        fi
+    fi
+    if [ -z "$match" ] && [ -f "${target}/go.mod" ]; then hint="go"
+    elif [ -z "$match" ] && [ -f "${target}/Cargo.toml" ]; then hint="rust"
+    elif [ -z "$match" ] && [ -f "${target}/composer.json" ]; then hint="laravel"
+    elif [ -z "$match" ] && [ -f "${target}/Dockerfile" ]; then hint="docker"
+    fi
+
+    if $json; then
+        if [ -n "$match" ]; then
+            printf '{"blueprint":"%s","detected_by":"%s"}\n' "$(json_escape "$match")" "$(json_escape "$detail")"
+            return 0
+        fi
+        printf '{"blueprint":null%s}\n' "${hint:+, \"hint\":\"$(json_escape "$hint")\"}"
+        return 1
+    fi
+
+    if [ -n "$match" ]; then
+        ok "Detected blueprint: ${GREEN}${match}${NC} — ${detail}"
+        info "Run: blueprint.sh init ${match}"
+        return 0
+    fi
+    if [ -n "$hint" ]; then
+        warn "No blueprint yet for '${hint}' — check back soon"
+    else
+        warn "No known stack detected (see 'blueprint.sh list')"
+    fi
+    return 1
 }
 
 cmd_init() {
@@ -252,7 +483,23 @@ cmd_init() {
 
     [ -d "$TARGET_DIR" ] || die "Target directory does not exist: ${TARGET_DIR}"
 
+    # Resolve to physical path so symlinked --dir can't escape the project
+    local base
+    base="$(cd "$TARGET_DIR" && pwd -P 2>/dev/null || echo "${TARGET_DIR%/}")"
+    TARGET_DIR="$base"
+
     local target="${TARGET_DIR%/}/.opencode"
+
+    # Refuse to follow a symlinked .opencode (write-escape guard)
+    if [ -L "$target" ]; then
+        if $FORCE; then
+            info "Removing symlink ${target} (--force)"
+            run rm "$target"
+        else
+            die "${target} is a symlink — refusing to follow it (use --force to replace it)"
+        fi
+    fi
+
     info "Applying blueprint '${name}': ${desc:-$name}"
     debug "Source:      ${BPDIR}"
     debug "Target:      ${target}"
@@ -315,14 +562,23 @@ main() {
     local cmd="${1:-help}"
     shift || true
 
-    echo ""
-    echo -e "${BOLD}opencode-blueprints${NC} — v${VERSION} — Per-project OpenCode setups"
-    echo -e "${CYAN}${REPO_URL}${NC}"
-    echo ""
+    local json_flag=false a
+    for a in "$@"; do
+        if [ "$a" = "--json" ]; then json_flag=true; fi
+    done
+
+    if ! $json_flag; then
+        echo ""
+        echo -e "${BOLD}opencode-blueprints${NC} — v${VERSION} — Per-project OpenCode setups"
+        echo -e "${CYAN}${REPO_URL}${NC}"
+        echo ""
+    fi
 
     case "$cmd" in
-        list)          cmd_list ;;
-        show)          cmd_show "${1:-}" ;;
+        list)          cmd_list "$@" ;;
+        show)          cmd_show "$@" ;;
+        detect)        cmd_detect "$@" ;;
+        test)          cmd_test "$@" ;;
         init)          cmd_init "$@" ;;
         update)        cmd_update ;;
         --version|-V)  echo "opencode-blueprints ${VERSION}" && exit 0 ;;

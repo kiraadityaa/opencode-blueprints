@@ -66,18 +66,28 @@ Itu saja. Deploy tidak menghapus apa pun di mesin kamu — hanya membuat `.openc
 
 ```
 blueprint.sh list                 Daftar blueprint yang tersedia
+blueprint.sh list --json          Sama, dalam JSON (banner disembunyikan)
 blueprint.sh show <name>          Lihat detail sebuah blueprint
+blueprint.sh show <name> --json   Sama, sebagai satu objek JSON
+blueprint.sh detect [<path>]      Deteksi stack di sebuah direktori → saran blueprint
+blueprint.sh detect <path> --json Cetak {"blueprint": "...", "detected_by": "..."}
+blueprint.sh test [<name>|all]    Validasi blueprint secara lokal (exit 1 jika gagal)
+blueprint.sh test all --dir <p>   Validasi folder blueprints/ di lokasi lain (mis. fork)
 blueprint.sh init <name>          Terapkan blueprint ke .opencode/ proyek saat ini
 blueprint.sh update               Perbarui katalog blueprint dari GitHub
 blueprint.sh --version            Cetak versi lalu keluar
 blueprint.sh --help               Tampilkan bantuan ini
 ```
 
+`detect` memindai `package.json` (react/next/vite → `ts-react`, express/fastify → `node-api`), `pyproject.toml`/`requirements.txt`/`uv.lock` → `python`, dan memberi petunjuk stack yang belum ada blueprint-nya (`go`, `rust`, `laravel`, `docker`). Exit code 0 saat terdeteksi, 1 jika tidak — cocok untuk scripting.
+
+`test` memvalidasi tiap `blueprints/*/`: `blueprint.meta` (`name`, `description`, `stack`, `name` harus sama dengan nama folder), `opencode.json` (JSON valid + ada aturan default `"*"` di `permission.bash`), keberadaan `AGENTS.md`, dan frontmatter `description:` pada tiap file agent/command.
+
 ### Opsi `init`
 
 | Opsi | Keterangan |
 |---|---|
-| `--dir <path>` | Direktori proyek tujuan (default: direktori saat ini) |
+| `--dir <path>` | Direktori proyek tujuan (default: direktori saat ini) — diresolusi ke `pwd -P` (anti-escape symlink) |
 | `--root` | Sekaligus menulis `AGENTS.md` ke root proyek |
 | `--no-agents` | Lewati agent bawaan stack |
 | `--no-commands` | Lewati command bawaan stack |
@@ -168,7 +178,7 @@ Bisa — varian pipa `curl … | bash -s init <nama>` otomatis mengunduh dan men
 
 ## Pengembangan
 
-Lihat [CONTRIBUTING.md](CONTRIBUTING.md). Setiap perubahan pada `blueprints/*` atau `blueprint.sh` divalidasi di CI: `shellcheck` pada script, validitas JSON setiap `opencode.json`, dan smoke test `init` end-to-end.
+Lihat [CONTRIBUTING.md](CONTRIBUTING.md). Setiap perubahan pada `blueprints/*` atau `blueprint.sh` divalidasi di CI: `shellcheck` pada script, `blueprint.sh test all` (meta + JSON + permission + frontmatter), smoke test `detect`, dan smoke test `init` end-to-end.
 
 ## Lisensi
 

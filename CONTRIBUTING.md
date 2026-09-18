@@ -38,14 +38,13 @@ Rules:
 # shellcheck the CLI
 shellcheck blueprint.sh
 
-# validate every blueprint (meta + JSON + expected files)
-for d in blueprints/*/; do
-  grep -q '^name:'  "$d/blueprint.meta"
-  [ -f "$d/opencode.json" ] && [ -f "$d/AGENTS.md" ]
-  python3 -m json.tool "$d/opencode.json" >/dev/null
-done
+# run the built-in validator (meta + JSON + default permission + frontmatter)
+bash blueprint.sh test all
 
-# smoke test the CLI against a temp project
+# detect smoke — should suggest a blueprint
+bash blueprint.sh detect .
+
+# smoke test init (deploy + dry-run)
 bash blueprint.sh init ts-react --dir "$(mktemp -d)" --force --dry-run
 ```
 

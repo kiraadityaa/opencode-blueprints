@@ -19,18 +19,23 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Check structure and JSON validity
+      - name: Run built-in validator (test all)
+        run: bash blueprint.sh test all
+
+  detect-smoke:
+    name: Detect smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: detect --json output is valid and banner-free
         run: |
           set -euo pipefail
-          for d in blueprints/*/; do
-            [ -f "$d/blueprint.meta" ] || { echo "missing blueprint.meta in $d"; exit 1; }
-            grep -q '^name:' "$d/blueprint.meta" || { echo "missing name in $d"; exit 1; }
-            [ -f "$d/opencode.json" ] || { echo "missing opencode.json in $d"; exit 1; }
-            [ -f "$d/AGENTS.md" ] || { echo "missing AGENTS.md in $d"; exit 1; }
-            python3 -m json.tool "$d/opencode.json" >/dev/null
-            echo "ok: $d"
-          done
-          echo "All blueprints valid."
+          mkdir -p /tmp/react && printf '{"dependencies":{"react":"^18","next":"^14"}}\n' > /tmp/react/package.json
+          [ "$(bash blueprint.sh detect /tmp/react --json)" = '{"blueprint":"ts-react","detected_by":"package.json (next + react)"}' ]
+          bash blueprint.sh detect /tmp/react --json | python3 -m json.tool >/dev/null
+          mkdir -p /tmp/empty
+          bash blueprint.sh detect /tmp/empty && exit 1 || echo "ok: empty dir exits non-zero"
+          echo "detect ok"
 
   init-smoke:
     name: Init smoke test

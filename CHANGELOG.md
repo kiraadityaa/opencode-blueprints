@@ -4,6 +4,17 @@ All notable changes to this project are documented here. Adheres to [Semantic Ve
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-18
+
+### Added
+- `detect` command: keyword-scan a directory to suggest a blueprint (supports `--json`)
+- `test` command: validate blueprints locally (`test all` or `test <name>`)
+- `--json` flag for `list` and `show` — machine-readable JSON output (banner suppressed)
+- `--dir` hardening: symlinked `.opencode` is refused unless `--force` replaces it
+
+### Fixed
+- `init --dir` now resolves to physical path (canonical `pwd -P`) to prevent symlink escape
+
 ### Added
 
 - Initial release:

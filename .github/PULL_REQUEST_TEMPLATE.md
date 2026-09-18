@@ -14,8 +14,7 @@
 ## Checklist
 
 - [ ] `shellcheck blueprint.sh` passes (if script changed)
-- [ ] Each new/changed `opencode.json` is valid JSON
-- [ ] Each blueprint has `blueprint.meta` (with `name:`), `AGENTS.md`, `opencode.json`
+- [ ] `bash blueprint.sh test all` passes (if blueprints changed)
 - [ ] README / FAQ updated if the CLI or blueprint list changed
 
 ## Testing
