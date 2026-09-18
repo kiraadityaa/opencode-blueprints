@@ -272,7 +272,7 @@ cmd_init() {
     fi
 
     # Deploy
-    mkdir -p "$target" "${target}/agents" "${target}/commands"
+    run mkdir -p "$target" "${target}/agents" "${target}/commands"
     run cp "${BPDIR}/opencode.json" "${target}/opencode.json"
     run cp "${BPDIR}/AGENTS.md" "${target}/AGENTS.md"
 
