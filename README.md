@@ -11,6 +11,8 @@ One command, and your OpenCode gets a stack-tuned config for the project you're 
 [![Release](https://img.shields.io/github/v/release/kiraadityaa/opencode-blueprints?logo=github)](https://github.com/kiraadityaa/opencode-blueprints/releases)
 [![Repo](https://img.shields.io/badge/opencode-setup--opencode-3b3b3b?logo)](https://github.com/kiraadityaa/setup-opencode)
 
+**English** · [Bahasa Indonesia](README.id.md)
+
 </div>
 
 ---
