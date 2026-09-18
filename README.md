@@ -31,7 +31,7 @@ OpenCode reads **global** config from `~/.config/opencode/` and **project** conf
 
 **opencode-blueprints** gives you ready-made, stack-tuned project configs. Pick one, run one command, done.
 
-## ✨ Features
+## Features
 
 - **One command, zero dependencies** — a single bash script (`blueprint.sh`), no npm/pip/curl-of-a-toolchain. Deploys into a plain `.opencode/` folder.
 - **Stack-tuned by design** — each blueprint ships the right `permission.bash` rules (e.g. `npm publish: deny` for frontends, `uv`/`pytest`/`ruff`/`mypy` allow for Python), stack conventions in `AGENTS.md`, an agent, and a command.
