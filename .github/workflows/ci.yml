@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Lint blueprint.sh
+        run: shellcheck blueprint.sh
+
+  validate-blueprints:
+    name: Validate blueprints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check structure and JSON validity
+        run: |
+          set -euo pipefail
+          for d in blueprints/*/; do
+            [ -f "$d/blueprint.meta" ] || { echo "missing blueprint.meta in $d"; exit 1; }
+            grep -q '^name:' "$d/blueprint.meta" || { echo "missing name in $d"; exit 1; }
+            [ -f "$d/opencode.json" ] || { echo "missing opencode.json in $d"; exit 1; }
+            [ -f "$d/AGENTS.md" ] || { echo "missing AGENTS.md in $d"; exit 1; }
+            python3 -m json.tool "$d/opencode.json" >/dev/null
+            echo "ok: $d"
+          done
+          echo "All blueprints valid."
+
+  init-smoke:
+    name: Init smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Real init of each blueprint in a temp project
+        run: |
+          set -euo pipefail
+          for meta in blueprints/*/blueprint.meta; do
+            name="$(sed -n 's/^name: *//p' "$meta" | head -n 1)"
+            project="$(mktemp -d)"
+            bash blueprint.sh init "$name" --dir "$project" --force
+            test -f "$project/.opencode/opencode.json"
+            test -f "$project/.opencode/AGENTS.md"
+            diff "$project/.opencode/opencode.json" "blueprints/$name/opencode.json"
+            if [ -d "blueprints/$name/agents" ]; then
+              for f in blueprints/$name/agents/*.md; do
+                test -f "$project/.opencode/agents/$(basename "$f")" \
+                  || { echo "missing agent $(basename "$f")"; exit 1; }
+              done
+            fi
+            if [ -d "blueprints/$name/commands" ]; then
+              for f in blueprints/$name/commands/*.md; do
+                test -f "$project/.opencode/commands/$(basename "$f")" \
+                  || { echo "missing command $(basename "$f")"; exit 1; }
+              done
+            fi
+            echo "ok: $name deploys"
+            rm -rf "$project"
+          done
+      - name: Dry-run must not write files
+        run: |
+          set -euo pipefail
+          project="$(mktemp -d)"
+          bash blueprint.sh init ts-react --dir "$project" --dry-run --force
+          test ! -d "$project/.opencode" && echo "ok: dry-run leaves no trace"

@@ -1,0 +1,38 @@
+name: Feature request
+description: Suggest a new blueprint or a blueprint.sh feature
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for an idea! New blueprints follow the conventions in CONTRIBUTING.md.
+  - type: dropdown
+    id: type
+    attributes:
+      label: What are you asking for?
+      options:
+        - New blueprint (a stack)
+        - blueprint.sh feature (CLI/options)
+        - Docs improvement
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: stack
+    attributes:
+      label: Target stack (for new blueprints)
+      description: e.g. Go, Laravel, Docker, Rust
+    validations:
+      required: false
+  - type: textarea
+    id: value
+    attributes:
+      label: Why is this valuable?
+      description: What conventions would the tuned permissions/agents/commands encode?
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Describe the solution you'd like
+    validations:
+      required: true
