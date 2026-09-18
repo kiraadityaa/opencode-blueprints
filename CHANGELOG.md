@@ -4,6 +4,12 @@ All notable changes to this project are documented here. Adheres to [Semantic Ve
 
 ## [Unreleased]
 
+### Added
+- project banner (`assets/banner.svg`) shown in the README hero
+- `.editorconfig` and `.gitattributes` (consistent eol, indentation, diffs)
+- Dependabot (`github-actions` ecosystem) and repo metadata (description + 8 topics)
+- README sections: ✨ Features, How it works, Acknowledgments (mirrored in Bahasa Indonesia)
+
 ## [0.2.0] - 2026-09-18
 
 ### Added

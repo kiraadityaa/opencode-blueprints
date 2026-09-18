@@ -1,14 +1,15 @@
 <div align="center">
 
-# ⌘ opencode-blueprints
+<img src="assets/banner.svg" alt="opencode-blueprints" width="100%">
 
 **Per-project OpenCode setups — drop-in `.opencode/` config, one per stack.**
 
 One command, and your OpenCode gets a stack-tuned config for the project you're working in — permissions, AGENTS.md, agents, and commands, all inside `.opencode/`.
 
-[![Shellcheck](https://img.shields.io/github/actions/workflow/status/kiraadityaa/opencode-blueprints/ci.yml?branch=main&label=CI&logo=github)](https://github.com/kiraadityaa/opencode-blueprints/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/kiraadityaa/opencode-blueprints/ci.yml?branch=main&label=CI&logo=github)](https://github.com/kiraadityaa/opencode-blueprints/actions)
 [![License](https://img.shields.io/github/license/kiraadityaa/opencode-blueprints?color=blue)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/kiraadityaa/opencode-blueprints?logo=github)](https://github.com/kiraadityaa/opencode-blueprints/releases)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?logo=github)](CONTRIBUTING.md)
 [![Repo](https://img.shields.io/badge/opencode-setup--opencode-3b3b3b?logo)](https://github.com/kiraadityaa/setup-opencode)
 
 **English** · [Bahasa Indonesia](README.id.md)
@@ -29,6 +30,25 @@ OpenCode reads **global** config from `~/.config/opencode/` and **project** conf
 | Example | sudo allow, git rules, memory MCP | `npm publish: deny` for a frontend, `uv` allow for Python |
 
 **opencode-blueprints** gives you ready-made, stack-tuned project configs. Pick one, run one command, done.
+
+## ✨ Features
+
+- **One command, zero dependencies** — a single bash script (`blueprint.sh`), no npm/pip/curl-of-a-toolchain. Deploys into a plain `.opencode/` folder.
+- **Stack-tuned by design** — each blueprint ships the right `permission.bash` rules (e.g. `npm publish: deny` for frontends, `uv`/`pytest`/`ruff`/`mypy` allow for Python), stack conventions in `AGENTS.md`, an agent, and a command.
+- **Safe by default** — never touches your global `~/.config/opencode/`, writes only inside the target project, backs up to `.opencode.bak.<timestamp>` on `--force`, and `--dry-run` previews every action.
+- **`detect` your stack** — point it at a directory and it suggests the matching blueprint (scriptable, `--json` output, exit code 0/1).
+- **Self-validating** — `blueprint.sh test all` checks meta, JSON, permissions, and frontmatter; CI runs it on every push.
+- **Works without cloning** — `curl … | bash -s init <name>` auto-downloads and caches the catalog.
+
+## How it works
+
+```text
+1. pick          blueprint.sh list / detect .      → choose the right stack
+2. deploy        blueprint.sh init <name>          → creates .opencode/ in your project
+3. use           opencode                          → project rules apply on top of your global config
+```
+
+OpenCode merges project config over global config, so `setup-opencode` (machine-wide) and a blueprint (per-project) compose instead of conflicting.
 
 ## Available blueprints
 
@@ -179,6 +199,12 @@ Yes — the piped `curl … | bash -s init <name>` variant auto-downloads and ca
 ## Development
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Every change to `blueprints/*` or `blueprint.sh` is validated in CI: `shellcheck` on the script, `blueprint.sh test all` (meta + JSON + permission + frontmatter), a `detect` smoke test, and an end-to-end `init` smoke test.
+
+## Acknowledgments
+
+- [opencode](https://github.com/anomalyco/opencode) — the AI coding agent these blueprints configure.
+- [setup-opencode](https://github.com/kiraadityaa/setup-opencode) — the companion repo for machine-wide OpenCode config; blueprints build on it.
+- [anthropics/skills](https://github.com/anthropics/skills) — reference for the agent/command file conventions used in `setup-opencode`.
 
 ## License
 

@@ -1,14 +1,15 @@
 <div align="center">
 
-# ⌘ opencode-blueprints
+<img src="assets/banner.svg" alt="opencode-blueprints" width="100%">
 
 **Setup OpenCode per-proyek — config `.opencode/` siap pakai, satu per stack.**
 
 Satu perintah, dan OpenCode kamu langsung dapat konfigurasi yang disesuaikan stack untuk proyek yang sedang dikerjakan — permission, AGENTS.md, agent, dan command, semuanya di dalam `.opencode/`.
 
-[![Shellcheck](https://img.shields.io/github/actions/workflow/status/kiraadityaa/opencode-blueprints/ci.yml?branch=main&label=CI&logo=github)](https://github.com/kiraadityaa/opencode-blueprints/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/kiraadityaa/opencode-blueprints/ci.yml?branch=main&label=CI&logo=github)](https://github.com/kiraadityaa/opencode-blueprints/actions)
 [![License](https://img.shields.io/github/license/kiraadityaa/opencode-blueprints?color=blue)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/kiraadityaa/opencode-blueprints?logo=github)](https://github.com/kiraadityaa/opencode-blueprints/releases)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?logo=github)](CONTRIBUTING.md)
 [![Repo](https://img.shields.io/badge/opencode-setup--opencode-3b3b3b?logo)](https://github.com/kiraadityaa/setup-opencode)
 
 [English](README.md) · **Bahasa Indonesia**
@@ -29,6 +30,25 @@ OpenCode membaca config **global** dari `~/.config/opencode/` dan config **proye
 | Contoh | sudo allow, aturan git, MCP memory | `npm publish: deny` untuk frontend, izin `uv` untuk Python |
 
 **opencode-blueprints** menyediakan config proyek siap pakai yang di-tune per stack. Pilih satu, jalankan satu perintah, selesai.
+
+## ✨ Fitur
+
+- **Satu perintah, tanpa dependensi** — script bash tunggal (`blueprint.sh`), tidak butuh npm/pip. Deploy ke folder `.opencode/` biasa.
+- **Di-tune per stack** — tiap blueprint membawa aturan `permission.bash` yang tepat (mis. `npm publish: deny` untuk frontend, izin `uv`/`pytest`/`ruff`/`mypy` untuk Python), konvensi stack di `AGENTS.md`, sebuah agent, dan sebuah command.
+- **Aman sejak desain** — tidak pernah menyentuh config global `~/.config/opencode/`, hanya menulis di dalam proyek tujuan, backup ke `.opencode.bak.<timestamp>` saat `--force`, dan `--dry-run` mempratinjau semua aksi.
+- **`detect` stack kamu** — arahkan ke sebuah direktori, ia akan menyarankan blueprint yang cocok (bisa di-script, output `--json`, exit code 0/1).
+- **Memvalidasi diri sendiri** — `blueprint.sh test all` memeriksa meta, JSON, permission, dan frontmatter; CI menjalankannya di setiap push.
+- **Bisa dipakai tanpa clone** — `curl … | bash -s init <nama>` otomatis mengunduh dan meng-cache katalog.
+
+## Cara kerjanya
+
+```text
+1. pilih         blueprint.sh list / detect .      → tentukan stack yang tepat
+2. deploy        blueprint.sh init <name>          → membuat .opencode/ di proyek kamu
+3. pakai         opencode                          → aturan proyek berlaku di atas config global
+```
+
+OpenCode menggabungkan config proyek di atas config global, jadi `setup-opencode` (seluruh mesin) dan blueprint (per-proyek) saling melengkapi, bukan bertabrakan.
 
 ## Blueprint yang tersedia
 
@@ -179,6 +199,12 @@ Bisa — varian pipa `curl … | bash -s init <nama>` otomatis mengunduh dan men
 ## Pengembangan
 
 Lihat [CONTRIBUTING.md](CONTRIBUTING.md). Setiap perubahan pada `blueprints/*` atau `blueprint.sh` divalidasi di CI: `shellcheck` pada script, `blueprint.sh test all` (meta + JSON + permission + frontmatter), smoke test `detect`, dan smoke test `init` end-to-end.
+
+## Ucapan terima kasih
+
+- [opencode](https://github.com/anomalyco/opencode) — agent AI coding yang dikonfigurasi oleh blueprint ini.
+- [setup-opencode](https://github.com/kiraadityaa/setup-opencode) — repo pendamping untuk config OpenCode seluruh mesin; blueprint dibangun di atasnya.
+- [anthropics/skills](https://github.com/anthropics/skills) — referensi konvensi file agent/command yang dipakai di `setup-opencode`.
 
 ## Lisensi
 
