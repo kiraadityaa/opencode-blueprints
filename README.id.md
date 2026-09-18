@@ -11,6 +11,7 @@ Satu perintah, dan OpenCode kamu langsung dapat konfigurasi yang disesuaikan sta
 [![Release](https://img.shields.io/github/v/release/kiraadityaa/opencode-blueprints?logo=github)](https://github.com/kiraadityaa/opencode-blueprints/releases)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?logo=github)](CONTRIBUTING.md)
 [![Repo](https://img.shields.io/badge/opencode-setup--opencode-3b3b3b?logo)](https://github.com/kiraadityaa/setup-opencode)
+[![Repo](https://img.shields.io/badge/opencode-doctor-3b3b3b?logo)](https://github.com/kiraadityaa/opencode-doctor)
 
 [English](README.md) · **Bahasa Indonesia**
 
@@ -204,6 +205,7 @@ Lihat [CONTRIBUTING.md](CONTRIBUTING.md). Setiap perubahan pada `blueprints/*` a
 
 - [opencode](https://github.com/anomalyco/opencode) — agent AI coding yang dikonfigurasi oleh blueprint ini.
 - [setup-opencode](https://github.com/kiraadityaa/setup-opencode) — repo pendamping untuk config OpenCode seluruh mesin; blueprint dibangun di atasnya.
+- [opencode-doctor](https://github.com/kiraadityaa/opencode-doctor) — CLI pemeriksa kesehatan (`bash doctor.sh --json`) untuk mendiagnosis dan memperbaiki config OpenCode global maupun proyek.
 - [anthropics/skills](https://github.com/anthropics/skills) — referensi konvensi file agent/command yang dipakai di `setup-opencode`.
 
 ## Lisensi

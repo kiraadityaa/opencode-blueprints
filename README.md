@@ -11,6 +11,7 @@ One command, and your OpenCode gets a stack-tuned config for the project you're 
 [![Release](https://img.shields.io/github/v/release/kiraadityaa/opencode-blueprints?logo=github)](https://github.com/kiraadityaa/opencode-blueprints/releases)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?logo=github)](CONTRIBUTING.md)
 [![Repo](https://img.shields.io/badge/opencode-setup--opencode-3b3b3b?logo)](https://github.com/kiraadityaa/setup-opencode)
+[![Repo](https://img.shields.io/badge/opencode-doctor-3b3b3b?logo)](https://github.com/kiraadityaa/opencode-doctor)
 
 **English** · [Bahasa Indonesia](README.id.md)
 
@@ -204,6 +205,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Every change to `blueprints/*` or `bluep
 
 - [opencode](https://github.com/anomalyco/opencode) — the AI coding agent these blueprints configure.
 - [setup-opencode](https://github.com/kiraadityaa/setup-opencode) — the companion repo for machine-wide OpenCode config; blueprints build on it.
+- [opencode-doctor](https://github.com/kiraadityaa/opencode-doctor) — a health-check CLI (`bash doctor.sh --json`) that diagnoses and repairs your global and project OpenCode config.
 - [anthropics/skills](https://github.com/anthropics/skills) — reference for the agent/command file conventions used in `setup-opencode`.
 
 ## License
