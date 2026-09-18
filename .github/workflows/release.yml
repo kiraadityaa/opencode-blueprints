@@ -19,7 +19,7 @@ jobs:
           echo "version=$(cat VERSION)" >> "$GITHUB_OUTPUT"
           echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
       - name: Create release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.meta.outputs.tag }}
           body: |
