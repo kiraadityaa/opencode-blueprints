@@ -1,0 +1,6 @@
+name: node-api
+description: Node.js HTTP API (Express / Fastify) with zod validation + tests
+stack: node, typescript, express, fastify, npm
+effort: low
+keywords: backend, api, rest, http, zod
+aliases: api, backend, rest, node, express

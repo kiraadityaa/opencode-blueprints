@@ -1,0 +1,6 @@
+name: python
+description: Python project (uv/pip) with pytest + ruff + mypy
+stack: python, uv, pip, pytest, ruff, mypy
+effort: low
+keywords: backend, scripts, data, ml, cli
+aliases: py, backend, scripts

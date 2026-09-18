@@ -1,0 +1,6 @@
+name: ts-react
+description: TypeScript + React frontend (Vite / Next) with vitest + eslint
+stack: typescript, react, vite, next, node, npm
+effort: low
+keywords: frontend, web, spa, tsx, vitest
+aliases: ts, react, vite, frontend
